@@ -8,7 +8,7 @@ import phrases
 from pyretree import pyretree
 
 intentions = pyretree.RegexCollection()
-music_players = "(zune|play music)"
+music_players = "(spotify|winamp|itunes)"
 
 # ----
 @intentions.add("open <app>")
