@@ -14,7 +14,7 @@ intentions = pyretree.RegexCollection()
 # Simplest example, a literal string to match
 @intentions.add("play")
 def play():
-    return "Playing music"
+    print('Playing music')
 
 # Syntax: Use <> to extract keywords from text: <positional_variable> <variable_must_match="">
 # () is a group, | is a logical OR, and ? is a existential quantifier, just like in normal regular expressions.
