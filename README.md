@@ -11,7 +11,7 @@ app_words = '(app|application|program)'
 
 intentions = pyretree.RegexCollection()
 
-# Syntax: Use <> to extract keywords from text: <positional_variable> <named_variable="">
+# Syntax: Use <> to extract keywords from text: <positional_variable> <variable_must_match="">
 # () is a group, | is a logical OR, and ? is a existential quantifier, just like in normal regular expressions.
 # {} is Python string formatting. Use this with your own collections of commonly used words to cut down on repetition.
 @intentions.add('play <song>')
