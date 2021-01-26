@@ -33,7 +33,7 @@ def play_song_with(song, app=None):
 intentions.prepare()
 
 
-# Using the built RegexCollection
+# Using the built RegexCollection. Note that calls to match() will return whatever the hooked function returns.
 intentions.match('play fake arms by foreign fields')
 # > Playing "Fake Arms By Foreign Fields"
 
