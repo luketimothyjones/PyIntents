@@ -1,8 +1,11 @@
+import os
+import sys
+sys.path.append(os.path.abspath('..'))
+
 import subprocess
 
-import ..pyretree
 import phrases
-
+from pyretree import pyretree
 
 intentions = pyretree.RegexCollection()
 music_players = "(zune|play music)"
