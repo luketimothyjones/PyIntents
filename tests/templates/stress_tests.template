@@ -1,0 +1,56 @@
+import time
+import cProfile, pstats, io
+
+import stress_intents
+from test_helpers import format_seconds
+
+def _run_random_tests(profile=False):
+    intentions = stress_intents.intentions
+    
+    if profile:
+        profiler = cProfile.Profile()
+        profiler.enable()
+    
+    results = []
+    
+    # ====
+{tests}
+
+
+    # ====
+    if all(results):
+        print('\nSTRESS TEST PASSED :: ALL TESTS RETURNED TRUE')
+    else:
+        print('\nSTRESS TEST FAILED :: NOT ALL TESTS RETURNED TRUE')
+        
+    if profile:
+        profiler.disable() 
+        
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(profiler, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
+
+        
+def run_stress_tests(loops, profile=False):
+    intent_count = {func_count} * {dec_count}
+    print(f'\nRunning stress test ({{intent_count}} intents and queries, {{loops}} iterations)...')
+    
+    runtimes = []
+    for _ in range(loops):
+        start = time.process_time()
+        _run_random_tests(profile)
+        stop = time.process_time()
+        runtimes.append(stop-start)
+
+    total_runtime = sum(runtimes)
+    total_avg = total_runtime / loops
+
+    print('\n(Match)')
+    print(f'Average: {{format_seconds(total_avg / intent_count)}}')
+    
+    print('\n(Full test set)')
+    print(f'Average: {{format_seconds(total_avg)}}')
+    print(f'Minimum: {{format_seconds(min(runtimes))}}')
+    print(f'Total:   {{format_seconds(total_runtime)}}')
