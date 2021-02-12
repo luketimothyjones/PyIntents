@@ -236,7 +236,7 @@ class RegexCollection:
             return f'<RegexCollection (unbuilt) with {self._regex_tree._pending_count} unprepared regexps'
 
     def __repr__(self):
-        if self._regex_tree._regex_tree_built:
+        if self._regex_tree._built:
             return pprint.pformat(self._regex_tree._tree)
 
         else:
