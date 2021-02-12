@@ -11,10 +11,11 @@ pyretree_logger.addHandler(logging.NullHandler())
 
 class _RegexTree:
 
-    def __init__(self, preserve_regexps=False, max_depth=None):
+    def __init__(self, separator=' ', preserve_regexps=False, max_depth=None):
         self._raw_regexps = []
         self._tree = {}
         
+        self._separator = separator
         self._preserve_regexps = preserve_regexps
         self._max_depth = max_depth
         self._built = False
@@ -83,12 +84,12 @@ class _RegexTree:
         expression, regex, callback = regex
         
         current_node = self._tree
-        expression_parts = expression.split(' ')
+        expression_parts = expression.split(self._separator)
         parts_count = len(expression_parts)
         
         max_depth = min(self._max_depth, parts_count)
         
-        # Iterate through the expression
+        # Iterate through the expression and build the branches
         for part_pos in range(max_depth):
             part = expression_parts[part_pos]
 
@@ -99,15 +100,15 @@ class _RegexTree:
                 current_node = current_node['<VAR>']
                 break
             
-            # Hit a literal (word)
+            # Hit a constant (plain text)
             else:
                 if not current_node.get(part, False):
-                    # Last node is a list
+                    # Deepest node is a list
                     if part_pos == (max_depth - 1):
                         current_node[part] = []
                     
                     # All other nodes are dicts
-                    elif not node_exists:
+                    else:
                         current_node[part] = {}
 
             current_node = current_node[part]
@@ -117,10 +118,9 @@ class _RegexTree:
             current_node['<END>'] = current_node['<END>'] if '<END>' in current_node else []
             current_node = current_node['<END>']
         
-        
-        # Expressions without variables (entirely constants) are always checked first
+        # Expressions without variables (entirely constants) are always checked first (highest weight)
         if not '<' in expression:
-            expression_weight = 9999
+            expression_weight = 9999999
         else:
             expression_weight = len(expression)
         
@@ -138,8 +138,8 @@ class _RegexTree:
         if not self._built:
             return None
         
-        space_sep = text.split(' ')
-        first, all_but_first = space_sep[0], space_sep[1:]
+        separated = text.split(self._separator)
+        first, all_but_first = separated[0], separated[1:]
         
         current_node = self._tree.get(first, False)
 
@@ -148,7 +148,7 @@ class _RegexTree:
             return False, False
             
         if first[0] == '<' and first[-1] == '>':
-            raise RegexException('First item in regex cannot be a variable')
+            raise Exception('First item in regex cannot be a variable')
         
         # Traverse tree to find applicable regexps
         iter_boundry = min(len(all_but_first), self._max_depth)
@@ -236,9 +236,9 @@ class RegexCollection:
             return f'<RegexCollection (unbuilt) with {self._regex_tree._pending_count} unprepared regexps'
         
     def __repr__(self):
-        if self._built:
+        if self._regex_tree_built:
             return pprint.pformat(self._regex_tree._tree)
-        
+
         else:
             notice = '\n==\nNOTICE: Displaying unprepared regexps\n==\n' 
             return f'{notice}{pprint.pformat(self._regex_tree._raw_regexps)}{notice}'
