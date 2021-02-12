@@ -196,8 +196,8 @@ class _RegexTree:
 
 # ----
 class RegexCollection:
-    def __init__(self, preserve_regs=False):
-        self._regex_tree = _RegexTree(preserve_regs)
+    def __init__(self, separator=' ', preserve_regexps=False):
+        self._regex_tree = _RegexTree(separator=separator, preserve_regexps=preserve_reexpgs)
         self._prev_function = None
 
     # ----
@@ -236,7 +236,7 @@ class RegexCollection:
             return f'<RegexCollection (unbuilt) with {self._regex_tree._pending_count} unprepared regexps'
 
     def __repr__(self):
-        if self._regex_tree_built:
+        if self._regex_tree._regex_tree_built:
             return pprint.pformat(self._regex_tree._tree)
 
         else:
