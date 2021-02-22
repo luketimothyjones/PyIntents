@@ -197,7 +197,7 @@ class _RegexTree:
 # ----
 class RegexCollection:
     def __init__(self, separator=' ', preserve_regexps=False):
-        self._regex_tree = _RegexTree(separator=separator, preserve_regexps=preserve_reexpgs)
+        self._regex_tree = _RegexTree(separator=separator, preserve_regexps=preserve_regexps)
         self._prev_function = None
 
     # ----
