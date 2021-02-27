@@ -189,7 +189,7 @@ def google_speech_connector(keybind='shift+f12'):
             requests = (speech.StreamingRecognizeRequest(audio_content=chunk)
                         for chunk in audio_generator)
 
-            responses = client.streaming_recognize(streaming_config, requests)
+            responses = client.streaming_recognize(config=streaming_config, requests=requests)
 
             # Now, put the transcription responses to use.
             recognize_intent_loop(responses)

@@ -1,9 +1,7 @@
 # Custom
 pyretree/old/
 
-examples/voice.json
-examples/resources/__keyboard
-examples/pyretree
+examples/assistant/voice.json
 
 tests/stress_intents.py
 tests/stress_tester.py
