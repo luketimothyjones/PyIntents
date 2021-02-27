@@ -1,11 +1,16 @@
 import os
 import sys
-sys.path.append(os.path.abspath('..'))
-
+import pathlib
 import subprocess
 
+try:
+    from pyretree import pyretree
+except ImportError:
+    # Gross way to import from the package structure
+    sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.parent.absolute()))
+    from pyretree import pyretree
+
 import phrases
-from pyretree import pyretree
 
 intentions = pyretree.RegexCollection()
 music_players = "(spotify|winamp|itunes)"

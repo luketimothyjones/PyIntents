@@ -18,8 +18,6 @@
 # --
 # Imports for audio parsing
 from google.cloud import speech
-from google.cloud.speech import enums
-from google.cloud.speech import types
 from google.api_core import exceptions as google_exceptions
 
 import pyaudio
@@ -171,13 +169,13 @@ def google_speech_connector(keybind='shift+f12'):
 
     client = speech.SpeechClient()
     
-    config = types.RecognitionConfig(
-        encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
+    config = speech.RecognitionConfig(
+        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=RATE,
         language_code=language_code
     )
         
-    streaming_config = types.StreamingRecognitionConfig(
+    streaming_config = speech.StreamingRecognitionConfig(
         config=config,
         interim_results=False
     )
@@ -188,7 +186,7 @@ def google_speech_connector(keybind='shift+f12'):
         with MicrophoneStream(RATE, CHUNK, keybind) as stream:
             audio_generator = stream.generator()
             
-            requests = (types.StreamingRecognizeRequest(audio_content=chunk)
+            requests = (speech.StreamingRecognizeRequest(audio_content=chunk)
                         for chunk in audio_generator)
 
             responses = client.streaming_recognize(streaming_config, requests)
