@@ -25,7 +25,7 @@ class _RegexTree:
 
         self._regex_flags = re.IGNORECASE
         self._build_parser_main = re.compile('<(.*?)(=(.*?))?>', flags=self._regex_flags)
-        self._build_parser_fill_novalue = re.compile('>\)', flags=self._regex_flags)
+        self._build_parser_fill_novalue = re.compile(r'>\)', flags=self._regex_flags)
 
     # ----
     def add(self, expression, callback):
@@ -66,6 +66,7 @@ class _RegexTree:
                 self._pending_count -= 1
 
         self._built = True
+
         return True
 
     # ----
@@ -85,16 +86,17 @@ class _RegexTree:
 
         current_node = self._tree
         expression_parts = expression.split(self._separator)
-        parts_count = len(expression_parts)
-
-        max_depth = min(self._max_depth, parts_count)
+        max_depth = min(self._max_depth, len(expression_parts))
 
         # Iterate through the expression and build the branches
         for part_pos in range(max_depth):
             part = expression_parts[part_pos]
 
+            if len(part) == 0:
+                current_node[''] = current_node[''] if '' in current_node else []
+
             # Hit a variable (<...>)
-            if part[0] == '<' and part[-1] == '>':
+            elif part[0] == '<' and part[-1] == '>':
                 # Create an regex list if one does not exist
                 current_node['<VAR>'] = current_node['<VAR>'] if '<VAR>' in current_node else []
                 current_node = current_node['<VAR>']
@@ -118,7 +120,7 @@ class _RegexTree:
             current_node['<END>'] = current_node['<END>'] if '<END>' in current_node else []
             current_node = current_node['<END>']
 
-        # Expressions without variables (entirely constants) are always checked first (highest weight)
+        # Expressions without variables (entirely constants) are always checked first (lowest weight)
         if not '<' in expression:
             expression_weight = 9999999
         else:
@@ -128,12 +130,15 @@ class _RegexTree:
         current_node.sort(key=itemgetter(0), reverse=True)
 
     # ----
-    def match(self, text):
+    def match(self, text, extra_params=None):
         """
         Calls the most applicable regex's callback.
+        extra_params (dict) : Extra data to be passed to the called function
         --
         Returns (tuple): (bool) found match, callback result
         """
+
+        extra_params = {} if extra_params is None else extra_params
 
         if not self._built:
             return None
@@ -147,7 +152,7 @@ class _RegexTree:
         if not current_node:
             return False, False
 
-        if first[0] == '<' and first[-1] == '>':
+        if len(first) > 2 and first[0] == '<' and first[-1] == '>':
             raise Exception('First item in regex cannot be a variable')
 
         # Traverse tree to find applicable regexps
@@ -175,7 +180,7 @@ class _RegexTree:
             extracted = regex.match(text)
 
             if extracted:
-                return True, callback(**extracted.groupdict())
+                return True, callback(**extracted.groupdict(), **extra_params)
 
         return False, False
 
@@ -184,7 +189,7 @@ class _RegexTree:
         if self._built:
             return f'<RegexTree (built) with {self._regex_count} regexps>'
         else:
-            return f'<RegexTree (unbuilt) with {self._pending_count} queued regexps'
+            return f'<RegexTree (unbuilt) with {self._pending_count} queued regexps>'
 
     def __repr__(self):
         if self._built:
@@ -197,11 +202,26 @@ class _RegexTree:
 # ----
 class RegexCollection:
     def __init__(self, separator=' ', preserve_regexps=False):
+        """
+        Stores regexp-like strings containing `separator` in an optimal way to minimize time to match against any number of regexps.
+        Use an instance of RegexCollection to decorate functions using RegexpCollection.add
+        ---
+        separator (str) : The character(s) by which the stored strings will be split
+        preserve_regexps (bool) : Whether or not to preserve added expressions after RegexCollection.prepare() is called. This allows
+                                  for addition of more expressions after prepare() is called at the cost of some memory.
+        """
+
         self._regex_tree = _RegexTree(separator=separator, preserve_regexps=preserve_regexps)
         self._prev_function = None
 
     # ----
     def add(self, expression, raw=False):
+        """
+        Decorator : Add an expression to the collection and bind it to the decorated function
+        ----
+        expression (str) : A regexp-like string to match against. Use <some_var> and <some_var=foo> to extract values from the matching text.
+        raw (bool) : Whether or not to interpret the expression as a raw regexp (skip reformatting from simpler format)
+        """
 
         def regex_adder(callback, *args, **kwargs):
             # Cache previous function to resolve issue with stacked decorators
@@ -215,8 +235,17 @@ class RegexCollection:
         return regex_adder
 
     # ----
-    def match(self, text):
-        result = self._regex_tree.match(text)
+    def match(self, text, extra_params=None):
+        """
+        Calls the most applicable regex's callback.
+        ----
+        text (str) : String to parse with the collection
+        extra_params (dict) : Extra parameters to be passed to the called function
+        --
+        Returns (tuple): (bool) found match, callback result
+        """
+
+        result = self._regex_tree.match(text, extra_params)
 
         if result is None:
             raise Exception('RegexCollection must be prepared before matching')
@@ -225,6 +254,11 @@ class RegexCollection:
 
     # ----
     def prepare(self):
+        """
+        Build the collection after expressions have been added to it. Must be called before
+        RegexCollection.match() may be used.
+        """
+
         if not self._regex_tree.build_tree():
             pyretree_logger.debug('RegexCollection was already prepared\n')
 
