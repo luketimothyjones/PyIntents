@@ -2,7 +2,9 @@
  Hook simplified regular expressions (see example for syntax) to functions and extract keywords from the results. Can support massive numbers of hooks with no noticeable performance penalty (max to match in the tens of milliseconds), as compared to simply comparing against a list of regular expressions (many, many seconds to match).
 
 Examples projects can be found in the [examples](https://github.com/luketimothyjones/pyretree/tree/main/examples) folder
+
   [Multithreaded webserver](https://github.com/luketimothyjones/pyretree/tree/main/examples/webserver)
+
   [Personal assistant](https://github.com/luketimothyjones/pyretree/tree/main/examples/assistant)
 
 Example use:
