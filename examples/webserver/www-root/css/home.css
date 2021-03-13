@@ -1,0 +1,31 @@
+body {
+    margin: 25px;
+    background-color: #161616;
+    color: white;
+    text-align: center;
+}
+
+a {
+    color: white;
+    display: inline-block;
+    }
+
+    a:hover {
+    color: #cccccc;
+}
+
+#seaside-img {
+    max-width: 800px;
+    width: 100%;
+    margin-top: 15px;
+
+    -webkit-box-shadow: 0 0 20px rgba(0,0,0, .8);
+    -moz-box-shadow: 0 0 20px rgba(0,0,0, .8);
+    box-shadow: 0 0 20px rgba(0,0,0, .8);
+    }
+
+    #seaside-img:hover {
+        -webkit-box-shadow: 0 0 20px rgba(75,75,75, .5);
+        -moz-box-shadow: 0 0 20px rgba(75,75,75, .5);
+        box-shadow: 0 0 20px rgba(75,75,75, .5);
+}
