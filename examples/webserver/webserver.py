@@ -1,14 +1,23 @@
 import json
 import mimetypes
+import pathlib
 import re
 import socket
 import socketserver
+import sys
 import threading
 import time
 import urllib.parse
 
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
+
+try:
+    from pyretree import pyretree
+except ImportError:
+    # Gross way to import from the repository structure
+    sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.parent.absolute()))
+    from pyretree import pyretree
 
 
 # --------
@@ -34,7 +43,7 @@ def build_http_response(data, content_type='text/html', response_code='200 OK'):
 EXTRACT_HTML_HEAD_RE = re.compile('<% head %>(.+)<% /head %>', re.MULTILINE | re.DOTALL)
 def build_html_response(data, response_code='200 OK'):
     """
-    data (str) : HTML excluding <head> (see above)
+    data (str) : HTML excluding <head> (see below)
     ----
     Returns (bytes) HTTP response of parsed template file. Use <% head %> ... <% /head %> to add to
     HTML head. Data is automatically wrapped with <html> and given proper meta tags.
@@ -85,7 +94,7 @@ def build_json_response(data, response_code='200 OK'):
 def build_file_response(path, content_type=None):
     """
     path (str) : Path to file relative to www-root folder next to your server script
-    content_type (str) : Mimetype; if set to None mimetype will be automatically be determined
+    content_type (str) : Mimetype; if set to None mimetype will automatically be determined
     ----
     Return (bytes) HTTP response containing file data. If content_type is set of determined
     to be text/html, the file will be parsed as a template. 404's if <path> is a directory.
@@ -119,7 +128,10 @@ def build_file_response(path, content_type=None):
         return HTTP_500()
 
 # --------
-# HTTP errors for ease of use
+# Common HTTP responses for ease of use
+def HTTP_200(msg='200 OK'): return build_http_response(msg, response_code='200 OK')
+def HTTP_201(msg='201 Created'): return build_http_response(msg, response_code='201 Created')
+def HTTP_204(msg='204 No Content'): return build_http_response(msg, response_code='204 No Content')
 def HTTP_400(msg='400 Bad Request'): return build_http_response(msg, response_code='400 Bad Request')
 def HTTP_403(msg='403 Forbidden'): return build_http_response(msg, response_code='403 Forbidden')
 def HTTP_404(msg='404 Not Found'): return build_http_response(msg, response_code='404 Not Found')
@@ -254,24 +266,37 @@ class _ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 # ----
 class ThreadedWebServer:
 
-    def __init__(self, path_handler, host='localhost', port=5000):
+    def __init__(self, host='localhost', port=5000):
         """
         Multithreaded webserver for demonstrative purposes. No safety guarantees whatsoever.
         ----
-        path_handler (pyretree.RegexCollection(separator='/')) : See example_server.py
         host (str) : Host for the server
         port (int) : Port for the server
         """
-
-        self.path_handler = path_handler
+        
         self.host = host
         self.port = port
+
+        self.path_handler = pyretree.RegexCollection(separator='/')
+
+    # ----
+    def add_path(self, path):
+        """
+        Decorator : Add a path to the server and bind it to the decorated function.
+        ----
+        path (str) : A path in the format "HTTP_VERB:path"; for example, "GET:/my-path".
+                     Use <some_var> and <some_var=foo> to extract values from the path.
+        """
+
+        return self.path_handler.add(path)
 
     # ----
     def run_forever(self):
         """
         Run the server until CTRL+C is pressed or the process exits.
         """
+
+        self.path_handler.prepare()
 
         request_handler = _ThreadedTCPRequestHandler
         request_handler.path_handler = self.path_handler
